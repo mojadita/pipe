@@ -172,16 +172,27 @@ static size_t printus(int ix, struct pipe_program *p)
 {
 	size_t res = 0;
 	int j;
+    static char buffer[1024];
+    char *s = buffer;
+    size_t bfsz = sizeof buffer;
+    size_t n;
 
-	res += printf(
+#define ACT() do{s+=n; bfsz-=n;}while(0)
+
+	n = snprintf(s, bfsz,
 		F("%d: pid = %d, ppid = %d, program = \"%s\": args = "),
 		ix, p->pid, p->ppid, p->pname);
-	for (j = 0; p->argv[j]; j++)
-		res += printf(
+    ACT();
+	for (j = 0; p->argv[j]; j++) {
+		n = snprintf(s, bfsz,
 			"%s\"%s\"",
 			j ? ", " : "{",
 			p->argv[j]);
-	res += printf("};\n");
+        ACT();
+    }
+	n = snprintf(s, bfsz, "};\n");
+    ACT();
+    fputs(buffer, stderr);
 
 	return res;
 }
