@@ -22,7 +22,7 @@
 #define CLOSE(expr) do{\
 		close(expr);\
 		fprintf(stderr, \
-			F("close("#expr" === %d);\n"), \
+			F("CLOSE("#expr" ==> %d);\n"), \
 			(expr));\
 	}while(0)
 
@@ -39,7 +39,7 @@
 #define DUP(expr1, expr2) do{\
 		if((res = dup2(expr1, expr2)) < 0) ERR("dup");\
 		fprintf(stderr,\
-			F("DUP("#expr1" === %d, "#expr2" === %d);\n"),\
+			F("DUP("#expr1" ==> %d, "#expr2" ==> %d);\n"),\
 			(expr1), (expr2));\
 	}while(0)
 
@@ -195,7 +195,7 @@ static size_t printus(int ix, struct pipe_program *p)
 			p->argv[j]);
         ACT();
     }
-	n = snprintf(s, bfsz, "};\n");
+	n = snprintf(s, bfsz, ", NULL};\n");
     ACT();
     fputs(buffer, stderr);
 
@@ -205,6 +205,7 @@ static size_t printus(int ix, struct pipe_program *p)
 static pid_t WAIT(int *status)
 {
 	pid_t res = wait(status);
-	fprintf(stderr, F("WAIT() ==> %d\n"), res);
+	fprintf(stderr, F("WAIT() ==> %d, STATUS <== 0x%08x\n"),
+            res, *status);
 	return res;
 }
