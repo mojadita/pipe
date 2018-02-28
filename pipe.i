@@ -5,6 +5,6 @@
  * to configure your own pipeline */
 prog(DISK_DUMP, "dd", "if=/dev/urandom", "ibs=1024")
 prog(BASE64, "uuencode", "-")
-/*prog(HEAD, "head", "-n", "40")*/
+prog(HEAD, "head", "-n", "20")
 prog(PR, "pr")
 prog(PAGER, "less", "-RF")
