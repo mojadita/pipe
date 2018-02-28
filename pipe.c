@@ -43,6 +43,13 @@
 			(expr1), (expr2));\
 	}while(0)
 
+#define EXEC(prog,argv) do{\
+		fprintf(stderr,\
+			F("EXEC("#prog", "#argv");\n"));\
+		execvp(prog,argv);\
+		ERR("exec(\"%s\")", prog);\
+	}while(0)
+
 /* INCLUDE THE DEFINITIONS FOR THE PROGRAM ARGUMENTS LISTS */
 
 #define prog(nam, var, ...) char * argv_##nam[] = { var, ##__VA_ARGS__, NULL };
@@ -100,9 +107,8 @@ int main()
 			DUP(pipe_fds[1], 1);
 			CLOSE(pipe_fds[1]);
 
-			execvp(p->pname, p->argv);
+			EXEC(p->pname, p->argv);
 
-			ERR("execvp: %s", p->pname);
 			/* NOTREACHED */
 
 		}
@@ -140,9 +146,8 @@ int main()
 
 		/* this time no output redirection */
 
-		execvp(p->pname, p->argv);
+		EXEC(p->pname, p->argv);
 
-		ERR("execvp");
 		/* NOTREACHED */
 	}
 
