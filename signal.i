@@ -1,3 +1,8 @@
+/* These are the signal calls, the values and descriptions
+ * you want to be informed by the pipe program.  Preprocesor
+ * uses this file to construct a table with the info placed
+ * here to recognise the signals to be output. 
+ * Signal values have been took from a freebsd system. */
 signal(SIGHUP,1,"hangup")
 signal(SIGINT,2,"interrupt")
 signal(SIGQUIT,3,"quit")

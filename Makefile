@@ -20,4 +20,4 @@ clean:
 pipe: $(pipe_objs) $(pipe_deps)
 	$(CC) $(DEBUGFLAGS) $(LDFLAGS) -o $@ $($@_objs) $($@_ldflags) $($@_libs)
 
-pipe.o: pipe.c pipe.i
+pipe.o: pipe.c pipe.i signal.i
