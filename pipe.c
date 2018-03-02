@@ -33,7 +33,7 @@
 
 #define FORK() do{\
 		if((res = fork()) < 0)ERR("fork");\
-		fprintf(stderr,F("FORK ==> %d%s\n"), res, res ? " (PARENT)" : " (SON)");\
+		fprintf(stderr,F("FORK ==> %d%s\n"), res, res ? " (PARENT)" : " (CHILD)");\
 	}while(0)
 
 #define DUP(expr1, expr2) do{\
