@@ -28,7 +28,7 @@
 
 #define PIPE(var) do{\
 		if(pipe(var)<0) ERR("pipe"); \
-		fprintf(stderr,F("PIPE ==> %d, %d\n"), var[0], var[1]);\
+		fprintf(stderr,F("PIPE ==> {%d, %d};\n"), var[0], var[1]);\
 	}while(0)
 
 #define FORK() do{\
@@ -71,8 +71,19 @@ struct pipe_program {
 /* size of last array */
 size_t pipe_programs_n = SIZE(pipe_programs);
 
-static size_t printus(int ix, struct pipe_program *p);
-static pid_t WAIT(int *status);
+struct signal_entry {
+	int		snum;
+	char	*snam;
+	char 	*sdesc;
+} signal_table[] = {
+#define signal(num, val, desc) val, #num, ""#num"-"#val": "desc,
+#include "signal.i"
+#undef signal
+	0, NULL, NULL,
+};
+
+static size_t procinfo(int ix, struct pipe_program *p);
+static pid_t WAIT(void);
 
 int main()
 {
@@ -93,7 +104,7 @@ int main()
 			p->ppid = getppid();
 
 			/* print who we are */
-			printus(i, p);
+			procinfo(i, p);
 
 			/* redirect input, if needed */
 			if (input_fd != 0) {
@@ -136,7 +147,7 @@ int main()
 		p->ppid = getppid();
 
 		/* print who we are */
-		printus(i, p);
+		procinfo(i, p);
 
 		/* redirect input */
 		if (input_fd != 0) {
@@ -156,24 +167,17 @@ int main()
 
 	/* parent code... we did pipe_programs_n fork()'s so we
 	 * have to do pipe_programs_n wait()'s */
-	int status;
-	pid_t cld_pid;
 	/* while we can wait for a child */
-	while ((cld_pid = WAIT(&status)) > 0) {
-		for (i = 0, p = pipe_programs; i < pipe_programs_n; i++, p++) {
-			if (cld_pid == p->pid) {
-				fprintf(stderr,
-					F("Child finished: pid = %d\n"),
-					cld_pid);
-				printus(i, p);
-				break;
-			}
-		}
-	} /* while */
+	while (WAIT() >= 0)
+		continue;
+
+	fprintf(stderr,
+		F("Normal exit.\n"));
+
 	exit(EXIT_SUCCESS);
 }
        
-static size_t printus(int ix, struct pipe_program *p)
+static size_t procinfo(int ix, struct pipe_program *p)
 {
 	size_t res = 0;
 	int j;
@@ -202,10 +206,48 @@ static size_t printus(int ix, struct pipe_program *p)
 	return res;
 }
 
-static pid_t WAIT(int *status)
+char *signal2str(int sig)
 {
-	pid_t res = wait(status);
-	fprintf(stderr, F("WAIT() ==> %d, STATUS <== 0x%08x\n"),
-            res, *status);
-	return res;
+	int i;
+	struct signal_entry *p;
+	for (i = 0, p = signal_table; p->snum; i++, p++) {
+		if (p->snum && p->snum == sig)
+			break;
+	}
+	return p->sdesc ? p->sdesc : "UNKOWN SIGNAL";
+}
+
+static pid_t WAIT(void)
+{
+	int status;
+	pid_t pid = wait(&status);
+	struct pipe_program *p;
+	int i;
+
+	if (pid < 0) return pid;
+
+	fprintf(stderr,
+		F("WAIT() ==> PID <== %d, STATUS <== 0x%08x\n"),
+			pid, status);
+	for (i = 0, p = pipe_programs; i < pipe_programs_n; i++, p++)
+		if (pid == p->pid) break;
+	if (i < pipe_programs_n) {
+		procinfo(i, p);
+	} else {
+		fprintf(stderr,
+			F("Process PID=%d not found\n"),
+			pid);
+	}
+	if (WIFEXITED(status)) {
+		fprintf(stderr,
+			F("Exit STATUS = %d\n"),
+			WEXITSTATUS(status));
+	}
+	if (WIFSIGNALED(status)) {
+		fprintf(stderr,
+			F("Child Killed by SIGNAL = %s%s\n"),
+			signal2str(WTERMSIG(status)),
+			WCOREDUMP(status) ? " (core dumped)" : "");
+	}
+	return pid;
 }

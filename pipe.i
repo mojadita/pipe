@@ -7,4 +7,6 @@ prog(DISK_DUMP, "dd", "if=/dev/urandom", "ibs=1024")
 prog(BASE64, "uuencode", "-")
 prog(HEAD, "head", "-n", "20")
 prog(PR, "pr")
+#if 0
 prog(PAGER, "less", "-RF")
+#endif
