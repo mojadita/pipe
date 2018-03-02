@@ -1,2 +1,4 @@
 pipe
 *.o
+*.core
+core
